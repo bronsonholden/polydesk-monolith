@@ -1,0 +1,6 @@
+[submodule "polydesk-api"]
+	path = polydesk-api
+	url = git@github.com:paulholden2/polydesk-api
+[submodule "polydesk-www"]
+	path = polydesk-www
+	url = git@github.com:paulholden2/polydesk-www
