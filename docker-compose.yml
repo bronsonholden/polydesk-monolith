@@ -1,0 +1,50 @@
+version: '3.7'
+
+services:
+  web:
+    image: nginx
+    ports:
+      - '80:80'
+  worker:
+    depends_on: [ db, redis ]
+    image: polydesk-api:latest
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db
+      - DATABASE_PORT=5432
+      - REDIS_URL=redis://redis:6379
+    command: bundle exec rake environment resque:work
+    volumes:
+      - storage:/polydesk-api/storage
+  db:
+    image: postgres
+    volumes:
+      - db-storage:/var/lib/postgresql/data
+  redis:
+    image: redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+  www:
+    build: ./polydesk-www
+    image: polydesk-www:latest
+  api:
+    depends_on: [ db, redis ]
+    build: ./polydesk-api
+    image: polydesk-api:latest
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db
+      - DATABASE_PORT=5432
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - storage:/polydesk-api/storage
+    secrets:
+      - source: api-master-key
+        target: /polydesk-api/config/master.key
+    ports:
+      - '3000:3000'
+volumes:
+  storage:
+  db-storage:
+    driver: local
+secrets:
+  api-master-key:
+    file: ./secrets/polydesk-api/config/master.key
