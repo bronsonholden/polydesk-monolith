@@ -4,8 +4,8 @@ services:
   web:
     image: nginx:1.16.0
     environment:
-      - POLYDESK_WWW_HOST=local.polydesk.io
-      - POLYDESK_API_HOST=apilocal.polydesk.io
+      - POLYDESK_WWW_HOST=www.polydesk.io
+      - POLYDESK_API_HOST=api.polydesk.io
     volumes:
       - ./nginx-templates/polydesk:/etc/nginx/conf.d/polydesk
     secrets:
