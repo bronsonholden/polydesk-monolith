@@ -1,6 +1,22 @@
 version: '3.7'
 
 services:
+  web:
+    image: nginx:1.16.0
+    environment:
+      - POLYDESK_WWW_HOST=local.polydesk.io
+      - POLYDESK_API_HOST=apilocal.polydesk.io
+    volumes:
+      - ./nginx-templates/polydesk:/etc/nginx/conf.d/polydesk
+    secrets:
+      - source: ssl-certificate
+        target: /polydesk-ssl/certificate.crt
+      - source: ssl-key
+        target: /polydesk-ssl/private.key
+    ports:
+      - '80:80'
+      - '443:443'
+    command: /bin/bash -c "envsubst '$$POLYDESK_API_HOST $$POLYDESK_WWW_HOST' < /etc/nginx/conf.d/polydesk > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"
   worker:
     depends_on: [ db, redis ]
     image: polydesk-api:latest
@@ -25,8 +41,6 @@ services:
   www:
     build: ./polydesk-www
     image: polydesk-www:latest
-    ports:
-      - '4200:80'
   api:
     depends_on: [ db, redis ]
     build: ./polydesk-api
@@ -40,8 +54,6 @@ services:
     secrets:
       - source: api-master-key
         target: /polydesk-api/config/master.key
-    ports:
-      - '3000:3000'
 volumes:
   storage:
   db-storage:
@@ -49,3 +61,7 @@ volumes:
 secrets:
   api-master-key:
     file: ./secrets/polydesk-api/config/master.key
+  ssl-certificate:
+    file: ./secrets/polydesk-ssl/certificate.crt
+  ssl-key:
+    file: ./secrets/polydesk-ssl/private.key
