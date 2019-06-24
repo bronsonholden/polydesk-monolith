@@ -46,6 +46,7 @@ services:
     build: ./polydesk-api
     image: polydesk-api:latest
     environment:
+      - RAILS_ENV=production
       - DATABASE_URL=postgres://postgres:postgres@db
       - DATABASE_PORT=5432
       - REDIS_URL=redis://redis:6379
