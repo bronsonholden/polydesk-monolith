@@ -1,0 +1,68 @@
+version: '3.7'
+
+services:
+  web:
+    image: nginx:1.16.0
+    environment:
+      - POLYDESK_WWW_HOST=local.polydesk.io
+      - POLYDESK_API_HOST=apilocal.polydesk.io
+    volumes:
+      - ./nginx-templates/polydesk:/etc/nginx/conf.d/polydesk
+    secrets:
+      - source: ssl-certificate
+        target: /polydesk-ssl/certificate.crt
+      - source: ssl-key
+        target: /polydesk-ssl/private.key
+    ports:
+      - '80:80'
+      - '443:443'
+    command: /bin/bash -c "envsubst '$$POLYDESK_API_HOST $$POLYDESK_WWW_HOST' < /etc/nginx/conf.d/polydesk > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"
+  worker:
+    depends_on: [ db, redis ]
+    image: polydesk-api:latest
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db
+      - DATABASE_PORT=5432
+      - REDIS_URL=redis://redis:6379
+    command: bundle exec rake environment resque:work
+    volumes:
+      - storage:/polydesk-api/storage
+    secrets:
+      - source: api-master-key
+        target: /polydesk-api/config/master.key
+  db:
+    image: postgres
+    volumes:
+      - db-storage:/var/lib/postgresql/data
+  redis:
+    image: redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+  www:
+    build: ./polydesk-www
+    image: polydesk-www:latest
+  api:
+    depends_on: [ db, redis ]
+    build: ./polydesk-api
+    image: polydesk-api:latest
+    environment:
+      - RAILS_ENV=production
+      - DATABASE_URL=postgres://postgres:postgres@db
+      - DATABASE_PORT=5432
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - storage:/polydesk-api/storage
+    secrets:
+      - source: api-master-key
+        target: /polydesk-api/config/master.key
+volumes:
+  storage:
+  db-storage:
+    driver: local
+secrets:
+  api-master-key:
+    file: ./secrets/polydesk-api/config/master.key
+  ssl-certificate:
+    file: ./secrets/polydesk-ssl/certificate.crt
+  ssl-key:
+    file: ./secrets/polydesk-ssl/private.key
