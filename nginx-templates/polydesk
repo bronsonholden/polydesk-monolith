@@ -7,6 +7,14 @@ server {
 
 server {
         listen 443 ssl;
+        ssl_certificate /polydesk-ssl/certificate.crt;
+        ssl_certificate_key /polydesk-ssl/private.key;
+        server_name polydesk.io;
+        return 301 https://www.polydesk.io$request_uri;
+}
+
+server {
+        listen 443 ssl;
         listen [::]:443 ssl;
         server_name ${POLYDESK_API_HOST};
         ssl_certificate /polydesk-ssl/certificate.crt;
