@@ -42,6 +42,11 @@ services:
   www:
     build: ./polydesk-www
     image: polydesk-www:latest
+    secrets:
+      - source: www-secrets
+        target: /src/secrets/secrets.ts
+      - source: www-secrets-prod
+        target: /src/secrets/secrets.prod.ts
   api:
     depends_on: [ db, redis ]
     build: ./polydesk-api
@@ -67,3 +72,7 @@ secrets:
     file: ./secrets/polydesk-ssl/certificate.crt
   ssl-key:
     file: ./secrets/polydesk-ssl/private.key
+  www-secrets:
+    file: ./secrets/polydesk-www/secrets/secrets.ts
+  www-secrets-prod:
+    file: ./secrets/polydesk-www/secrets/secrets.prod.ts
