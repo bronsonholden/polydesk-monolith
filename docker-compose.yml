@@ -44,9 +44,9 @@ services:
     image: polydesk-www:latest
     secrets:
       - source: www-secrets
-        target: /src/secrets/secrets.ts
+        target: /polydeks-www/src/secrets/secrets.ts
       - source: www-secrets-prod
-        target: /src/secrets/secrets.prod.ts
+        target: /polydeks-www/src/secrets/secrets.prod.ts
   api:
     depends_on: [ db, redis ]
     build: ./polydesk-api
